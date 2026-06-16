@@ -18,7 +18,7 @@
           ]"
           @click="selectAmount(amt)"
         >
-          {{ amt }}
+          {{ formatAmount(amt) }}
         </button>
       </div>
     </div>
@@ -30,7 +30,7 @@
       </label>
       <div class="relative">
         <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-dark-500">
-          $
+          {{ currencySymbol }}
         </span>
         <input
           type="text"
@@ -48,16 +48,19 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { normalizePaymentDisplayCurrency } from '@/components/payment/currency'
 
 const props = withDefaults(defineProps<{
   amounts?: number[]
   modelValue: number | null
   min?: number
   max?: number
+  displayCurrency?: string
 }>(), {
   amounts: () => [10, 20, 50, 100, 200, 500, 1000, 2000, 5000],
   min: 0,
   max: 0,
+  displayCurrency: 'USD',
 })
 
 const emit = defineEmits<{
@@ -67,16 +70,22 @@ const emit = defineEmits<{
 const { t } = useI18n()
 
 const customText = ref('')
+const currencyCode = computed(() => normalizePaymentDisplayCurrency(props.displayCurrency))
+const currencySymbol = computed(() => currencyCode.value === 'CNY' ? '￥' : '$')
 
 // 0 = no limit
 const filteredAmounts = computed(() =>
   props.amounts.filter((a) => (props.min <= 0 || a >= props.min) && (props.max <= 0 || a <= props.max))
 )
 
+function formatAmount(value: number): string {
+  return `${currencySymbol.value}${value}`
+}
+
 const placeholderText = computed(() => {
-  if (props.min > 0 && props.max > 0) return `${props.min} - ${props.max}`
-  if (props.min > 0) return `≥ ${props.min}`
-  if (props.max > 0) return `≤ ${props.max}`
+  if (props.min > 0 && props.max > 0) return `${formatAmount(props.min)} - ${formatAmount(props.max)}`
+  if (props.min > 0) return `≥ ${formatAmount(props.min)}`
+  if (props.max > 0) return `≤ ${formatAmount(props.max)}`
   return t('payment.enterAmount')
 })
 

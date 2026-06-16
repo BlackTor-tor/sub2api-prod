@@ -57,7 +57,7 @@
             </div>
             <div v-if="order.amount !== order.pay_amount" class="flex justify-between">
               <span class="text-gray-500 dark:text-gray-400">{{ t('payment.orders.creditedAmount') }}</span>
-              <span class="font-medium text-gray-900 dark:text-white">{{ order.order_type === 'balance' ? '$' + order.amount.toFixed(2) : formatGatewayAmount(order.amount) }}</span>
+              <span class="font-medium text-gray-900 dark:text-white">{{ formatDisplayAmount(order.amount) }}</span>
             </div>
             <div class="flex justify-between">
               <span class="text-gray-500 dark:text-gray-400">{{ t('payment.orders.paymentMethod') }}</span>
@@ -109,7 +109,7 @@ import {
 import { usePaymentStore } from '@/stores/payment'
 import { paymentAPI } from '@/api/payment'
 import type { PaymentOrder } from '@/types/payment'
-import { formatPaymentAmount, normalizePaymentCurrency } from '@/components/payment/currency'
+import { formatPaymentAmount, normalizePaymentCurrency, normalizePaymentDisplayCurrency } from '@/components/payment/currency'
 import { normalizePaymentMethodForDisplay, paymentMethodI18nKey } from './paymentUx'
 
 const i18n = useI18n()
@@ -121,6 +121,7 @@ const paymentStore = usePaymentStore()
 const order = ref<PaymentOrder | null>(null)
 const loading = ref(true)
 const currency = ref('CNY')
+const displayCurrency = ref('USD')
 
 interface ReturnInfo {
   outTradeNo: string
@@ -187,6 +188,10 @@ function normalizedOrderPaymentType(paymentType: string): string {
 
 function formatGatewayAmount(value: number): string {
   return formatPaymentAmount(value, currency.value, localeCode.value)
+}
+
+function formatDisplayAmount(value: number): string {
+  return formatPaymentAmount(value, displayCurrency.value, localeCode.value)
 }
 
 function setResolvedOrder(nextOrder: PaymentOrder | null): void {
@@ -335,6 +340,9 @@ onMounted(async () => {
   }
   if (restored?.currency) {
     currency.value = normalizePaymentCurrency(restored.currency)
+  }
+  if (restored?.displayCurrency) {
+    displayCurrency.value = normalizePaymentDisplayCurrency(restored.displayCurrency)
   }
   if (!outTradeNo && restored?.outTradeNo) {
     outTradeNo = restored.outTradeNo

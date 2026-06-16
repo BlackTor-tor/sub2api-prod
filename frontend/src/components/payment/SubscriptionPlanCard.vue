@@ -26,12 +26,12 @@
         </div>
         <div class="shrink-0 text-right">
           <div class="flex items-baseline gap-1">
-            <span class="text-xs text-gray-400 dark:text-dark-500">$</span>
-            <span :class="['text-2xl font-extrabold tracking-tight', textClass]">{{ plan.price }}</span>
+            <span class="text-xs text-gray-400 dark:text-dark-500">{{ displayCurrencySymbol }}</span>
+            <span :class="['text-2xl font-extrabold tracking-tight', textClass]">{{ formattedPrice }}</span>
           </div>
           <span class="text-[11px] text-gray-400 dark:text-dark-500">/ {{ validitySuffix }}</span>
           <div v-if="plan.original_price" class="mt-0.5 flex items-center justify-end gap-1.5">
-            <span class="text-xs text-gray-400 line-through dark:text-dark-500">${{ plan.original_price }}</span>
+            <span class="text-xs text-gray-400 line-through dark:text-dark-500">{{ formatDisplayAmount(plan.original_price) }}</span>
             <span :class="['rounded px-1 py-0.5 text-[10px] font-semibold', discountClass]">{{ discountText }}</span>
           </div>
         </div>
@@ -45,15 +45,15 @@
         </div>
         <div v-if="plan.daily_limit_usd != null" class="flex items-center justify-between">
           <span class="text-gray-400 dark:text-dark-500">{{ t('payment.planCard.dailyLimit') }}</span>
-          <span class="font-medium text-gray-700 dark:text-gray-300">${{ plan.daily_limit_usd }}</span>
+          <span class="font-medium text-gray-700 dark:text-gray-300">{{ formatDisplayAmount(plan.daily_limit_usd) }}</span>
         </div>
         <div v-if="plan.weekly_limit_usd != null" class="flex items-center justify-between">
           <span class="text-gray-400 dark:text-dark-500">{{ t('payment.planCard.weeklyLimit') }}</span>
-          <span class="font-medium text-gray-700 dark:text-gray-300">${{ plan.weekly_limit_usd }}</span>
+          <span class="font-medium text-gray-700 dark:text-gray-300">{{ formatDisplayAmount(plan.weekly_limit_usd) }}</span>
         </div>
         <div v-if="plan.monthly_limit_usd != null" class="flex items-center justify-between">
           <span class="text-gray-400 dark:text-dark-500">{{ t('payment.planCard.monthlyLimit') }}</span>
-          <span class="font-medium text-gray-700 dark:text-gray-300">${{ plan.monthly_limit_usd }}</span>
+          <span class="font-medium text-gray-700 dark:text-gray-300">{{ formatDisplayAmount(plan.monthly_limit_usd) }}</span>
         </div>
         <div v-if="plan.daily_limit_usd == null && plan.weekly_limit_usd == null && plan.monthly_limit_usd == null" class="flex items-center justify-between">
           <span class="text-gray-400 dark:text-dark-500">{{ t('payment.planCard.quota') }}</span>
@@ -99,6 +99,7 @@ import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { SubscriptionPlan } from '@/types/payment'
 import type { UserSubscription } from '@/types'
+import { formatPaymentAmount, normalizePaymentDisplayCurrency } from '@/components/payment/currency'
 import {
   platformAccentBarClass,
   platformBadgeLightClass,
@@ -110,7 +111,7 @@ import {
   platformLabel,
 } from '@/utils/platformColors'
 
-const props = defineProps<{ plan: SubscriptionPlan; activeSubscriptions?: UserSubscription[] }>()
+const props = defineProps<{ plan: SubscriptionPlan; activeSubscriptions?: UserSubscription[]; displayCurrency?: string }>()
 const emit = defineEmits<{ select: [plan: SubscriptionPlan] }>()
 const { t } = useI18n()
 
@@ -128,12 +129,24 @@ const iconClass = computed(() => platformIconClass(platform.value))
 const btnClass = computed(() => platformButtonClass(platform.value))
 const discountClass = computed(() => platformDiscountClass(platform.value))
 const pLabel = computed(() => platformLabel(platform.value))
+const displayCurrency = computed(() => normalizePaymentDisplayCurrency(props.displayCurrency))
+const displayCurrencySymbol = computed(() => displayCurrency.value === 'CNY' ? '￥' : '$')
+const formattedPrice = computed(() => formatDisplayNumber(props.plan.price))
 
 const discountText = computed(() => {
   if (!props.plan.original_price || props.plan.original_price <= 0) return ''
   const pct = Math.round((1 - props.plan.price / props.plan.original_price) * 100)
   return pct > 0 ? `-${pct}%` : ''
 })
+
+function formatDisplayAmount(value: number | null | undefined): string {
+  if (value == null) return ''
+  return formatPaymentAmount(value, displayCurrency.value)
+}
+
+function formatDisplayNumber(value: number | null | undefined): string {
+  return Number.isFinite(value) ? Number(value).toFixed(2) : '0.00'
+}
 
 const rateDisplay = computed(() => {
   const rate = props.plan.rate_multiplier ?? 1

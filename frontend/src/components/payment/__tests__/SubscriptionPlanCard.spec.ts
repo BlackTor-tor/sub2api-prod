@@ -24,7 +24,7 @@ const i18n = createI18n({
   },
 });
 
-const mountPlanCard = (groupPlatform: string) =>
+const mountPlanCard = (groupPlatform: string, displayCurrency?: string) =>
   mount(SubscriptionPlanCard, {
     props: {
       plan: {
@@ -41,6 +41,7 @@ const mountPlanCard = (groupPlatform: string) =>
         supported_model_scopes: ["claude", "gemini_text", "gemini_image"],
         is_active: true,
       },
+      displayCurrency,
     },
     global: { plugins: [i18n] },
   });
@@ -60,5 +61,12 @@ describe("SubscriptionPlanCard", () => {
     expect(text).toContain("Claude");
     expect(text).toContain("Gemini");
     expect(text).toContain("Imagen");
+  });
+
+  it("formats plan prices with the configured display currency", () => {
+    const text = mountPlanCard("openai", "CNY").text();
+
+    expect(text).toContain("￥10.00");
+    expect(text).not.toContain("$10");
   });
 });

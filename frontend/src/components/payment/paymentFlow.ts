@@ -41,6 +41,7 @@ export interface PaymentRecoverySnapshot {
   clientSecret: string
   intentId: string
   currency: string
+  displayCurrency: string
   countryCode: string
   paymentEnv: string
   payAmount: number
@@ -156,6 +157,7 @@ export function decidePaymentLaunch(
     clientSecret: result.client_secret || '',
     intentId: result.intent_id || '',
     currency: result.currency || '',
+    displayCurrency: '',
     countryCode: result.country_code || '',
     paymentEnv: result.payment_env || '',
     payAmount: result.pay_amount,
@@ -274,6 +276,7 @@ export function readPaymentRecoverySnapshot(
       || typeof parsed.clientSecret !== 'string'
       || (parsed.intentId != null && typeof parsed.intentId !== 'string')
       || (parsed.currency != null && typeof parsed.currency !== 'string')
+      || (parsed.displayCurrency != null && typeof parsed.displayCurrency !== 'string')
       || (parsed.countryCode != null && typeof parsed.countryCode !== 'string')
       || (parsed.paymentEnv != null && typeof parsed.paymentEnv !== 'string')
       || typeof parsed.payAmount !== 'number'
@@ -304,6 +307,7 @@ export function readPaymentRecoverySnapshot(
       clientSecret: parsed.clientSecret,
       intentId: parsed.intentId || '',
       currency: parsed.currency || '',
+      displayCurrency: parsed.displayCurrency || '',
       countryCode: parsed.countryCode || '',
       paymentEnv: parsed.paymentEnv || '',
       payAmount: parsed.payAmount,

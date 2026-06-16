@@ -6026,6 +6026,18 @@
                 <div class="grid grid-cols-2 gap-3 sm:grid-cols-5">
                   <div>
                     <label class="input-label">{{
+                      t("admin.settings.payment.displayCurrency")
+                    }}</label>
+                    <Select
+                      v-model="form.payment_display_currency"
+                      :options="paymentDisplayCurrencyOptions"
+                    />
+                    <p class="mt-0.5 text-xs text-gray-400">
+                      {{ t("admin.settings.payment.displayCurrencyHint") }}
+                    </p>
+                  </div>
+                  <div>
+                    <label class="input-label">{{
                       t("admin.settings.payment.minAmount")
                     }}</label
                     ><input
@@ -7656,6 +7668,7 @@ const form = reactive<SettingsForm>({
   payment_balance_disabled: false,
   payment_balance_recharge_multiplier: 1,
   payment_recharge_fee_rate: 0,
+  payment_display_currency: "USD",
   payment_enabled_types: [],
   payment_help_image_url: "",
   payment_help_text: "",
@@ -8451,6 +8464,8 @@ async function loadSettings() {
             content_md: doc.content_md || "",
           }))
         : defaultLoginAgreementDocuments();
+    form.payment_display_currency =
+      settings.payment_display_currency === "CNY" ? "CNY" : "USD";
     Object.assign(authSourceDefaults, buildAuthSourceDefaultsState(settings));
     form.default_platform_quotas = normalizePlatformQuotasMap(settings.default_platform_quotas);
     form.backend_mode_enabled = settings.backend_mode_enabled;
@@ -8953,6 +8968,7 @@ async function saveSettings() {
       payment_balance_recharge_multiplier:
         Number(form.payment_balance_recharge_multiplier) || 1,
       payment_recharge_fee_rate: Number(form.payment_recharge_fee_rate) || 0,
+      payment_display_currency: form.payment_display_currency,
       payment_enabled_types: form.payment_enabled_types,
       payment_load_balance_strategy: form.payment_load_balance_strategy,
       payment_product_name_prefix: form.payment_product_name_prefix,
@@ -9622,6 +9638,17 @@ const enabledProviderKeyOptions = computed(() => {
   const enabled = form.payment_enabled_types;
   return providerKeyOptions.value.filter((opt) => enabled.includes(opt.value));
 });
+
+const paymentDisplayCurrencyOptions = computed(() => [
+  {
+    value: "USD",
+    label: t("admin.settings.payment.displayCurrencyUsd"),
+  },
+  {
+    value: "CNY",
+    label: t("admin.settings.payment.displayCurrencyCny"),
+  },
+]);
 
 const loadBalanceOptions = computed(() => [
   {

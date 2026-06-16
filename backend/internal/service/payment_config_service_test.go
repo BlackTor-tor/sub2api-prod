@@ -96,6 +96,9 @@ func TestParsePaymentConfig(t *testing.T) {
 		if cfg.MaxPendingOrders != 3 {
 			t.Fatalf("expected MaxPendingOrders=3, got %v", cfg.MaxPendingOrders)
 		}
+		if cfg.DisplayCurrency != "USD" {
+			t.Fatalf("expected DisplayCurrency=USD by default, got %q", cfg.DisplayCurrency)
+		}
 		if cfg.LoadBalanceStrategy != payment.DefaultLoadBalanceStrategy {
 			t.Fatalf("expected LoadBalanceStrategy=%s, got %q", payment.DefaultLoadBalanceStrategy, cfg.LoadBalanceStrategy)
 		}
@@ -115,6 +118,7 @@ func TestParsePaymentConfig(t *testing.T) {
 			SettingMaxPendingOrders:    "5",
 			SettingEnabledPaymentTypes: "alipay,wxpay,stripe",
 			SettingBalancePayDisabled:  "true",
+			SettingDisplayCurrency:     " cny ",
 			SettingLoadBalanceStrategy: "least_amount",
 			SettingProductNamePrefix:   "PRE",
 			SettingProductNameSuffix:   "SUF",
@@ -147,6 +151,9 @@ func TestParsePaymentConfig(t *testing.T) {
 		}
 		if !cfg.BalanceDisabled {
 			t.Fatal("expected BalanceDisabled=true")
+		}
+		if cfg.DisplayCurrency != "CNY" {
+			t.Fatalf("DisplayCurrency = %q, want CNY", cfg.DisplayCurrency)
 		}
 		if cfg.LoadBalanceStrategy != "least_amount" {
 			t.Fatalf("LoadBalanceStrategy = %q, want %q", cfg.LoadBalanceStrategy, "least_amount")
@@ -429,6 +436,22 @@ func TestUpdatePaymentConfig_PersistsVisibleMethodRouting(t *testing.T) {
 	}
 	if repo.values[SettingPaymentVisibleMethodWxpaySource] != VisibleMethodSourceOfficialWechat {
 		t.Fatalf("wxpay source = %q, want %q", repo.values[SettingPaymentVisibleMethodWxpaySource], VisibleMethodSourceOfficialWechat)
+	}
+}
+
+func TestUpdatePaymentConfig_PersistsDisplayCurrency(t *testing.T) {
+	repo := &paymentConfigSettingRepoStub{values: map[string]string{}}
+	svc := &PaymentConfigService{settingRepo: repo}
+
+	err := svc.UpdatePaymentConfig(context.Background(), UpdatePaymentConfigRequest{
+		DisplayCurrency: paymentConfigStrPtr(" cny "),
+	})
+	if err != nil {
+		t.Fatalf("UpdatePaymentConfig returned error: %v", err)
+	}
+
+	if repo.values[SettingDisplayCurrency] != "CNY" {
+		t.Fatalf("display currency = %q, want CNY", repo.values[SettingDisplayCurrency])
 	}
 }
 

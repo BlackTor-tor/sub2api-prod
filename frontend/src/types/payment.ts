@@ -33,6 +33,7 @@ export interface PaymentConfig {
   order_timeout_minutes: number
   balance_disabled: boolean
   balance_recharge_multiplier: number
+  display_currency: string
   enabled_payment_types: PaymentType[]
   help_image_url: string
   help_text: string
@@ -66,6 +67,7 @@ export interface CheckoutInfoResponse {
   balance_disabled: boolean
   balance_recharge_multiplier: number
   recharge_fee_rate: number
+  display_currency: string
   help_text: string
   help_image_url: string
   stripe_publishable_key: string
